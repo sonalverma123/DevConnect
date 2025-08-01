@@ -3,6 +3,8 @@
 import Project from "@/models/Project";
 import { connectDB } from "@/lib/db";
 import ProjectCard from "@/components/ProjectCard";
+export const dynamic = "force-dynamic";
+
 
 export default async function ProjectsPage() {
   await connectDB();
