@@ -34,16 +34,15 @@ export const authOptions = {
   },
 
   callbacks: {
-    // ✅ Gmail restriction
     async signIn({ user }) {
       const allowedEmails = ["av0587992@gmail.com"];
       return allowedEmails.includes(user.email);
     },
 
-    // ✅ Enhance token with user info + ensure Google user is in DB
     async jwt({ token, user, account }) {
       if (user) {
         token.id = user._id;
+        token.email = user.email;
         token.role = user.role || "user";
       }
 
@@ -55,7 +54,7 @@ export const authOptions = {
             name: token.name,
             email: token.email,
             image: token.picture,
-            role: "user",
+            role: "user", // 👈 default role; change to "admin" if needed
           });
           token.id = newUser._id;
           token.role = newUser.role;
@@ -68,16 +67,18 @@ export const authOptions = {
       return token;
     },
 
-    // ✅ Add role and ID to session
     async session({ session, token }) {
       session.user.id = token.id;
       session.user.role = token.role;
       return session;
     },
 
-    // ✅ Post-login redirect
-    async redirect({ url, baseUrl }) {
-      return `${baseUrl}/dashboard`;
+    async redirect({ url, baseUrl, token }) {
+      const adminEmail = "av0587992@gmail.com";
+      if (token?.email === adminEmail) {
+        return `${baseUrl}/admin`; // 👈 send admin to admin panel
+      }
+      return `${baseUrl}/dashboard`; // 👈 default for regular users
     },
   },
 
