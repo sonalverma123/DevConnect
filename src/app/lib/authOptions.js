@@ -36,7 +36,7 @@ export const authOptions = {
   callbacks: {
     // ✅ Gmail restriction
     async signIn({ user }) {
-      const allowedEmails = ["admin123@gmail.com"];
+      const allowedEmails = ["av0587992@gmail.com"];
       return allowedEmails.includes(user.email);
     },
 
