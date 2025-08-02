@@ -6,13 +6,10 @@ import bcrypt from "bcrypt";
 
 export const authOptions = {
   providers: [
-    // Google OAuth provider
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     }),
-
-    // Credentials provider
     CredentialsProvider({
       name: "Credentials",
       credentials: {
@@ -37,14 +34,19 @@ export const authOptions = {
   },
 
   callbacks: {
-    // ✅ 1. Persist user ID and role in JWT
+    // ✅ Gmail restriction
+    async signIn({ user }) {
+      const allowedEmails = ["admin123@gmail.com"];
+      return allowedEmails.includes(user.email);
+    },
+
+    // ✅ Enhance token with user info + ensure Google user is in DB
     async jwt({ token, user, account }) {
       if (user) {
         token.id = user._id;
         token.role = user.role || "user";
       }
 
-      // ✅ 2. If Google sign-in, ensure user is in DB
       if (account?.provider === "google") {
         await connectDB();
         const existingUser = await User.findOne({ email: token.email });
@@ -53,7 +55,7 @@ export const authOptions = {
             name: token.name,
             email: token.email,
             image: token.picture,
-            role: "user", // default role
+            role: "user",
           });
           token.id = newUser._id;
           token.role = newUser.role;
@@ -66,14 +68,14 @@ export const authOptions = {
       return token;
     },
 
-    // ✅ 3. Inject user ID and role into session
+    // ✅ Add role and ID to session
     async session({ session, token }) {
       session.user.id = token.id;
       session.user.role = token.role;
       return session;
     },
 
-    // ✅ 4. Redirect after login
+    // ✅ Post-login redirect
     async redirect({ url, baseUrl }) {
       return `${baseUrl}/dashboard`;
     },
